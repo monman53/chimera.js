@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+<!--scripts-->
+<script src="https://cdn.jsdelivr.net/npm/vue@2.5.21/dist/vue.js"></script>
+<!--<script src="https://cdn.jsdelivr.net/npm/vue@2.5.21/dist/vue.min.js"></script>-->
+
+<!--main contents-->
+<h1>量子パズル</h1>
+<div id='emulator'>
+<svg viewBox="0 0 240 240" width="900">
+    <edge-item>
+    </edge-item>
+    <node-item
+        v-for='node in nodes'
+        :node='node'>
+    </node-item>
+</svg>
+</div>
+
+<script>
+Vue.component('node-item', {
+    props: ['node'],
+    template: `<circle :cx="node.x" :cy="node.y" r="5" stroke="#bbb" fill="#eee" />`,
+});
+
+var emulator = new Vue({
+    el: "#emulator",
+    data: {
+        nodes: [],
+        edges: [],
+    },
+    created: function() {
+        for(var i=0;i<3;i++) {
+            for(var j=0;j<3;j++) {
+                for(var k=0;k<8;k++) {
+                    this.nodes.push({
+                        x: j*80 + (k < 4 ? 10+k%4*20 : 40),
+                        y: i*80 + (k < 4 ? 40 : 10+k%4*20),
+                        id: (i*j*8+k),
+                    });
+                }
+            }
+        }
+    },
+});
+</script>
