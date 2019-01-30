@@ -9,8 +9,11 @@
 <!--main contents-->
 <h1>量子パズル</h1>
 <div id='emulator'>
-<svg viewBox="0 0 240 240" width="900">
-    <edge-item>
+<svg viewBox="0 0 300 300" width="900">
+    <edge-item
+        v-for='edge in edges'
+        :edge='edge'
+        :nodes='nodes'>
     </edge-item>
     <node-item
         v-for='node in nodes'
@@ -22,24 +25,62 @@
 <script>
 Vue.component('node-item', {
     props: ['node'],
-    template: `<circle :cx="node.x" :cy="node.y" r="5" stroke="#bbb" fill="#eee" />`,
+    template: `<circle :cx="node.x" :cy="node.y" r="6" stroke="#bbb" fill="#eee" />`,
+});
+
+Vue.component('edge-item', {
+    props: ['edge', 'nodes'],
+    template: `<line :x1="this.nodes[this.edge.i].x"
+                     :y1="this.nodes[this.edge.i].y"
+                     :x2="this.nodes[this.edge.j].x"
+                     :y2="this.nodes[this.edge.j].y"
+                     stroke="#bbb"
+                     stroke-width="1"/>`,
 });
 
 var emulator = new Vue({
     el: "#emulator",
     data: {
+        h: 3,
+        w: 3,
         nodes: [],
         edges: [],
+        graph: [],
     },
     created: function() {
-        for(var i=0;i<3;i++) {
-            for(var j=0;j<3;j++) {
+        // create graph
+        for(var i=0;i<this.h*this.w*8;i++) {
+            this.graph.push([]);
+            for(var j=0;j<this.h*this.w*8;j++) {
+                this.graph[i].push(0);
+            }
+        }
+        for(var i=0;i<this.h;i++) {
+            for(var j=0;j<this.w;j++) {
                 for(var k=0;k<8;k++) {
+                    // add nodes
                     this.nodes.push({
-                        x: j*80 + (k < 4 ? 10+k%4*20 : 40),
-                        y: i*80 + (k < 4 ? 40 : 10+k%4*20),
-                        id: (i*j*8+k),
+                        x: j*100 + (k < 4 ? k%4*20 + (k < 2 ? 15 : 25) : 50),
+                        y: i*100 + (k < 4 ? 50 : k%4*20 + (k < 6 ? 15 : 25)),
                     });
+
+                    // add edges
+                    var id = i*this.w*8 + j*8 + k;
+                    if(k < 4){
+                        for(var l=4;l<8;l++){
+                            this.edges.push({
+                                i: id,
+                                j: id-k+l,
+                            });
+                        }
+                        if(i < this.h-1){
+                            this.edges.push({i: id, j: id+this.w*8});
+                        }
+                    }else{
+                        if(j < this.w-1){
+                            this.edges.push({i: id, j: id+8});
+                        }
+                    }
                 }
             }
         }
