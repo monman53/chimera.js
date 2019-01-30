@@ -24,18 +24,61 @@
 
 <script>
 Vue.component('node-item', {
+    template: `<circle :cx="node.x"
+                       :cy="node.y"
+                       :r="r"
+                       :stroke="stroke"
+                       :fill="fill"
+                       :stroke-width="stroke_width"
+                       @mouseover="mouseOver"
+                       @mouseleave="mouseLeave"/>`,
     props: ['node'],
-    template: `<circle :cx="node.x" :cy="node.y" r="6" stroke="#bbb" fill="#eee" />`,
+    data: function() {
+        return {
+            mouse_over: false,
+        }
+    },
+    computed: {
+        r:              function() { return this.mouse_over ? 8 : 6; },
+        stroke_width:   function() { return this.mouse_over ? 2 : 1; },
+        stroke:         function() { return this.mouse_over ? "#aaa" : "#ddd"; },
+        fill:           function() { return this.mouse_over ? "#fff" : "#fff"; },
+    },
+    methods: {
+        mouseOver:  function(){ this.mouse_over = true  },
+        mouseLeave: function(){ this.mouse_over = false },
+    },
 });
 
 Vue.component('edge-item', {
+    template: `<g>
+                   <line :x1="x1" :y1="y1" :x2="x2" :y2="y2"
+                         :stroke="stroke"
+                         :stroke-width="stroke_width" />
+                   <line :x1="x1" :y1="y1" :x2="x2" :y2="y2"
+                         stroke="#0000"
+                         stroke-width="10"
+                         @mouseover="mouseOver"
+                         @mouseleave="mouseLeave"/>
+               </g>`,
     props: ['edge', 'nodes'],
-    template: `<line :x1="this.nodes[this.edge.i].x"
-                     :y1="this.nodes[this.edge.i].y"
-                     :x2="this.nodes[this.edge.j].x"
-                     :y2="this.nodes[this.edge.j].y"
-                     stroke="#bbb"
-                     stroke-width="1"/>`,
+    data: function() {
+        return {
+            mouse_over: false,
+        }
+    },
+    computed: {
+        stroke_width:   function() { return this.mouse_over ? 2 : 1; },
+        stroke:         function() { return this.mouse_over ? "#aaa" : "#ddd"; },
+        x1:             function() { return this.nodes[this.edge.i].x; }, 
+        y1:             function() { return this.nodes[this.edge.i].y; },
+        x2:             function() { return this.nodes[this.edge.j].x; }, 
+        y2:             function() { return this.nodes[this.edge.j].y; },
+    },
+    methods: {
+        mouseOver:  function(){ this.mouse_over = true;  },
+        mouseLeave: function(){ this.mouse_over = false; },
+    },
 });
 
 var emulator = new Vue({
@@ -60,18 +103,15 @@ var emulator = new Vue({
                 for(var k=0;k<8;k++) {
                     // add nodes
                     this.nodes.push({
-                        x: j*100 + (k < 4 ? k%4*20 + (k < 2 ? 15 : 25) : 50),
-                        y: i*100 + (k < 4 ? 50 : k%4*20 + (k < 6 ? 15 : 25)),
+                        x: j*100 + 50 + (k < 4 ? (k%2+1)*20*(k < 2 ? -1 : 1) : 0),
+                        y: i*100 + (k < 4 ? 50 : k%4*20 + (k < 6 ? 10 : 30)),
                     });
 
                     // add edges
                     var id = i*this.w*8 + j*8 + k;
                     if(k < 4){
                         for(var l=4;l<8;l++){
-                            this.edges.push({
-                                i: id,
-                                j: id-k+l,
-                            });
+                            this.edges.push({i: id, j: id-k+l});
                         }
                         if(i < this.h-1){
                             this.edges.push({i: id, j: id+this.w*8});
