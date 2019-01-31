@@ -1,41 +1,67 @@
 Vue.component('simulator', {
     template:`<div>
-                  <svg :viewBox='viewBox' :width="(w*200)">
-                      <rect x="0" y="0" :width="(w*100)" :height="(h*100)"
-                          style="fill: #0000"
-                          @mousedown='mouseDown'/>
-                      <edge-item
-                          v-for='edge in edges'
-                          :key='edge.id'
-                          :edge='edge'
-                          :pos='pos'
-                          :values='values'
-                          :selected_id='selected_id'
-                          @select='select'>
-                      </edge-item>
-                      <node-item
-                          v-for='node in nodes'
-                          :key='node.id'
-                          :node='node'
-                          :pos='pos'
-                          :values='values'
-                          :selected_id='selected_id'
-                          @select='select'>
-                      </node-item>
-                  </svg>
-                  <div>
-                      <button v-on:click="changeMode('input')">入力</button>
-                      <button v-on:click="changeMode('run')">実行</button>
-                      <button v-on:click="changeMode('output')">出力</button>
-                      <br>
-                      <input v-model="values[selected_id]" type='number' min='-1' max='1' step='0.01'>
-                      <input v-model="values[selected_id]" type='range'  min='-1' max='1' step='0.01'>
-                      <br>
-                      <input type='text' v-model="json_output" readonly>
-                      <input type='text' v-model="json_input">
-                      <button v-on:click="setInput()">書き込み</button>
+                  <button v-on:click="changeMode('input')">入力</button>
+                  <button v-on:click="changeMode('run')">実行</button>
+                  <button v-on:click="changeMode('output')">出力</button>
+                  <br>
+                  <div style="float: left">
+                      <svg :viewBox='viewBox' :width="(w*300)">
+                          <rect x="0" y="0" :width="(w*100)" :height="(h*100)"
+                              style="fill: #0000"
+                              @mousedown='mouseDown'/>
+                          <edge-item
+                              v-for='edge in edges'
+                              :key='edge.id'
+                              :edge='edge'
+                              :pos1='pos[edge.i]'
+                              :pos2='pos[edge.j]'
+                              :value='values[edge.id]'
+                              :mode='mode'
+                              :selected_id='selected_id'
+                              @select='select'>
+                          </edge-item>
+                          <node-item
+                              v-for='node in nodes'
+                              :key='node.id'
+                              :node='node'
+                              :pos='pos[node.id]'
+                              :value='values[node.id]'
+                              :mode='mode'
+                              :selected_id='selected_id'
+                              @select='select'>
+                          </node-item>
+                      </svg>
                   </div>
-              </div>`, 
+                  <div style="float: left">
+                      <div v-if="mode=='input' && selected_id != null">
+                          <h3>入力: 手動</h3>
+                          <input v-model="values[selected_id]" type='number' min='-1' max='1' step='0.01'>
+                          <br>
+                          <input v-model="values[selected_id]" type='range'  min='-1' max='1' step='0.01'>
+                      </div>
+                      <div v-if="mode=='input'">
+                          <h3>入力: 自動</h3>
+                          ->
+                          Read<input type='text' v-model="json_output" readonly>
+                          <br>
+                          <-
+                          <button v-on:click="setInput()">Write</button>
+                          <input type='text' v-model="json_input">
+                          <br>
+                          クリップボードで実装したい.jp
+                          <br>
+                          <-
+                          <button v-on:click="setRandomInput()">Random</button>
+                          <br>
+                          <-
+                          <button v-on:click="fillInput('')">Clear</button>
+                          <button v-on:click="fillInput(0)">0</button>
+                          <button v-on:click="fillInput(1)">1</button>
+                          <button v-on:click="fillInput(-1)">-1</button>
+                      </div>
+                  </div>
+                  <div style="clear: both"></div>
+              </div>`, // TODO
     props: {
         h: { default: 3 },
         w: { default: 3 },
@@ -120,9 +146,20 @@ Vue.component('simulator', {
             this.selected_id = null;
         },
         setInput: function() {
-            changeMode("input");
             var array = JSON.parse(this.json_input);
-            this.values_input = array;
+            for(var i=0;i<this.values_input.length;i++){
+                Vue.set(this.values_input, i, array[i]);
+            }
+        },
+        setRandomInput: function() {
+            for(var i=0;i<this.values_input.length;i++){
+                Vue.set(this.values_input, i, Math.round((Math.random()*2-1)*100)/100);
+            }
+        },
+        fillInput: function(v) {
+            for(var i=0;i<this.values_input.length;i++){
+                Vue.set(this.values_input, i, v);
+            }
         },
         runSA: function() {
         },
@@ -130,40 +167,38 @@ Vue.component('simulator', {
 });
 
 Vue.component('edge-item', {
-    template: `<g>
-                   <line :x1="x1" :y1="y1" :x2="x2" :y2="y2"
+    template: `<g
+                   @mouseover="mouseOver"
+                   @mousedown="mouseDown"
+                   @mouseleave="mouseLeave">
+                   <line :x1="pos1.x" :y1="pos1.y" :x2="pos2.x" :y2="pos2.y"
                          :stroke="stroke"
                          :stroke-width="stroke_width" />
-                   <line :x1="x1" :y1="y1" :x2="x2" :y2="y2"
+                   <line :x1="pos1.x" :y1="pos1.y" :x2="pos2.x" :y2="pos2.y"
                          stroke="#0000"
-                         stroke-width="3"
-                         @mouseover="mouseOver"
-                         @mousedown="mouseDown"
-                         @mouseleave="mouseLeave"/>
-                   <text :x="((x1+x2)/2)"
-                         :y="((y1+y2)/2)"
-                         font-size='3'
+                         stroke-width="3"/>
+                   <text :x="((pos1.x+pos2.x)/2)"
+                         :y="((pos1.y+pos2.y)/2)"
+                         :font-size='font_size'
                          text-anchor="middle"
                          dominant-baseline="ventral"
                          >
-                         {{values[edge.id]}}
+                         {{value}}
                    </text>
                </g>`,
-    props: ['edge', 'values', 'pos', 'selected_id'],
+    props: ['edge', 'value', 'pos1', 'pos2', 'mode', 'selected_id'],
     data: function() {
         return {
             mouse_over: false,
         }
     },
     computed: {
-        stroke_width:   function() { return this.active ? 1.5 : 1; },
-        stroke:         function() { return this.active ? "#aaa" : (this.isnull ? "#eee" : "#aaa"); },
-        x1:             function() { return this.pos[this.edge.i].x; }, 
-        y1:             function() { return this.pos[this.edge.i].y; },
-        x2:             function() { return this.pos[this.edge.j].x; }, 
-        y2:             function() { return this.pos[this.edge.j].y; },
-        active:         function() { return this.mouse_over || this.selected_id == this.edge.id},
-        isnull:         function() { return this.values[this.edge.id] == ''}
+        stroke_width:   function() { return this.active ? 2 : 1; },
+        stroke:         function() { return this.isnull ? (this.active ? "#aaa" : "#eee") : this.color; },
+        active:         function() { return (this.mouse_over || this.selected_id == this.edge.id) && this.mode == "input"},
+        isnull:         function() { return this.value === ''}, 
+        font_size:      function() { return this.active ? 6 : 3; },
+        color:          function() { return `rgb(${255*(this.value/2+0.5)}, 80, ${255*(1-(this.value/2+0.5))})` },
     },
     methods: {
         mouseOver:  function(){ this.mouse_over = true;  },
@@ -173,40 +208,40 @@ Vue.component('edge-item', {
 });
 
 Vue.component('node-item', {
-    template: `<g>
-                   <circle :cx="cx"
-                           :cy="cy"
+    template: `<g
+                   @mouseover="mouseOver"
+                   @mousedown="mouseDown"
+                   @mouseleave="mouseLeave">
+                   <circle :cx="pos.x"
+                           :cy="pos.y"
                            :r="r"
                            :stroke="stroke"
                            :fill="fill"
-                           :stroke-width="stroke_width"
-                           @mouseover="mouseOver"
-                           @mousedown="mouseDown"
-                           @mouseleave="mouseLeave"/>
-                   <text   :x="cx"
-                           :y="cy"
-                           font-size='3'
+                           :stroke-width="stroke_width"/>
+                   <text   :x="pos.x"
+                           :y="pos.y"
+                           :font-size='font_size'
                            text-anchor="middle"
                            dominant-baseline="ventral"
                            >
-                           {{values[node.id]}}
+                           {{value}}
                    </text>
                </g>`,
-    props: ['node', 'values', 'pos', 'selected_id'],
+    props: ['node', 'value', 'pos', 'mode', 'selected_id'],
     data: function() {
         return {
             mouse_over: false,
         }
     },
     computed: {
-        cx:             function() { return this.pos[this.node.id].x; },
-        cy:             function() { return this.pos[this.node.id].y; },
         r:              function() { return this.active ? 8 : 6; },
-        stroke_width:   function() { return this.active ? 1.5 : 1; },
-        stroke:         function() { return this.active ? "#aaa" : (this.isnull ? "#eee" : "#aaa"); },
-        fill:           function() { return this.active ? "#fff" : "#fff"; },
-        active:         function() { return this.mouse_over || this.selected_id == this.node.id},
-        isnull:         function() { return this.values[this.node.id] == ''}
+        stroke_width:   function() { return this.active ? 2 : 1; },
+        stroke:         function() { return this.isnull ? (this.active ? "#aaa" : "#eee") : this.color; },
+        font_size:      function() { return this.active ? 6 : 3; },
+        fill:           function() { return this.isnull ? "#fff" : this.color; },
+        active:         function() { return (this.mouse_over || this.selected_id == this.node.id) && this.mode == "input"},
+        isnull:         function() { return this.value === ''},
+        color:          function() { return `rgb(${255*(this.value/2+0.5)}, 80, ${255*(1-(this.value/2+0.5))})` },
     },
     methods: {
         mouseOver:  function(){ this.mouse_over = true;},
