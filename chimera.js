@@ -168,10 +168,25 @@ Vue.component('simulator', {
                 Vue.set(this.values_input, i, v);
             }
         },
+        energy: function(state) {
+            res = 0;
+            // nodes
+            for(var i=0;i<this.nodes.length;i++){
+                if(this.values_input[i] == '') continue;
+                res += this.values_input[i]*state[i];
+            }
+            // edges
+            for(var i=0;i<this.edges.length;i++){
+                const edge = this.edges[i];
+                if(this.values_input[edge.id] == '') continue;
+                res += this.values_input[edge.id]*state[edge.i]*state[edge.j];
+            }
+            return res;
+        }, 
         runSA: function() {
             this.changeMode('run');
 
-            // create graph
+            // create graph for future fast energy evaluation
             var graph = new Array(this.nodes.length);
             for(var i=0;i<this.nodes.length;i++){
                 graph[i] = [];
@@ -181,15 +196,46 @@ Vue.component('simulator', {
                 graph[edge.j].push({to: edge.i, weight: this.values[edge.id]});
             }
 
+
+            //----------------
+            // simulated annealing(do not use best state)    // TODO current: hill climbing
+            //----------------
+
             // create state
             var state = new Array(this.nodes.length);
             for(var i=0;i<state.length;i++){
                 state[i] = Math.random() < 0.5 ? -1 : 1;
             }
 
+            var energy_prev = this.energy(state);
+
+            // routine
+            for(var i=0;i<1000;i++){
+                var id = Math.floor(Math.random() * Math.floor(state.length));
+                //state[id] = 2-(state[id]+1)-1; // flip
+                state[id] = -state[id]; // flip
+                var energy_next = this.energy(state);
+                if(energy_next < energy_prev){
+                    energy_prev = energy_next;
+                }else{
+                    state[id] = -state[id]; // flip
+                }
+            }
+
+
+            //----------------
+            // output
+            //----------------
+
             // set output
             for(var i=0;i<this.values.length;i++){
-                Vue.set(this.values_output, i, this.values_input[i] === '' ? '' : i < this.nodes.length ? state[i] : 1);
+                if(i < this.nodes.length){
+                    // nodes
+                    Vue.set(this.values_output, i, this.values_input[i] === '' ? '' : state[i]);
+                }else{
+                    // edges
+                    Vue.set(this.values_output, i, this.values_input[i] === '' ? '' : 1);
+                }
             }
 
             this.changeMode('output');
