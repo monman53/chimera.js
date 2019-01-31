@@ -10,8 +10,8 @@ Vue.component('simulator', {
                               v-for='edge in edges'
                               :key='edge.id'
                               :item='edge'
-                              :pos1='pos[edge.i]'
-                              :pos2='pos[edge.j]'
+                              :pos1='nodes[edge.i]'
+                              :pos2='nodes[edge.j]'
                               :value='values[edge.id]'
                               :mode='mode'
                               @select='select'>
@@ -20,7 +20,7 @@ Vue.component('simulator', {
                               v-for='node in nodes'
                               :key='node.id'
                               :item='node'
-                              :pos='pos[node.id]'
+                              :pos='nodes[node.id]'
                               :value='values[node.id]'
                               :mode='mode'
                               @select='select'>
@@ -98,7 +98,6 @@ Vue.component('simulator', {
             values_output: [], 
             results: [],
             json_input: "",
-            pos: [],
             mode: "input",
             palette: 0,
             random_range: 1,
@@ -106,51 +105,50 @@ Vue.component('simulator', {
     },
     created: function() {
         this.values = this.values_input;
+        var id = 0;
 
-        // add nodes
+        // create nodes
         for(var i=0;i<this.h;i++) {
             for(var j=0;j<this.w;j++) {
                 for(var k=0;k<8;k++) {
-                    this.nodes.push({
-                        id: this.values.length,
-                    });
-                    this.values_input.push('');
-                    this.values_output.push('');
-
-                    // calculate pos
-                    this.pos.push({
+                    this.nodes.push({ 
+                        id: id,
                         x: j*100 + (k < 4 ? k%4*20 + (k < 2 ? 10 : 30) : 50),       // TODO
                         y: i*100 + (k < 4 ? 50 : k%4*20 + (k < 6 ? 10 : 30)),       // TODO
                     });
+                    id += 1;
                 }
             }
         }
 
-        // add edges
+        // create edges
         for(var i=0;i<this.h;i++) {
             for(var j=0;j<this.w;j++) {
                 for(var k=0;k<8;k++) {
-                    var id = i*this.w*8 + j*8 + k;
+                    var node_id = i*this.w*8 + j*8 + k;
                     if(k < 4){
                         for(var l=4;l<8;l++){
-                            this.edges.push({i: id, j: id-k+l, id: this.values.length,});
-                            this.values_input.push('');
-                            this.values_output.push('');
+                            this.edges.push({i: node_id, j: node_id-k+l, id: id});
+                            id += 1;
                         }
                         if(i < this.h-1){
-                            this.edges.push({i: id, j: id+this.w*8, id: this.values.length,});
-                            this.values_input.push('');
-                            this.values_output.push('');
+                            this.edges.push({i: node_id, j: node_id+this.w*8, id: id});
+                            id += 1;
                         }
                     }else{
                         if(j < this.w-1){
-                            this.edges.push({i: id, j: id+8, id: this.values.length,});
-                            this.values_input.push('');
-                            this.values_output.push('');
+                            this.edges.push({i: node_id, j: node_id+8, id: id});
+                            id += 1;
                         }
                     }
                 }
             }
+        }
+
+        // create values
+        for(var i=0;i<this.nodes.length+this.edges.length;i++){
+            this.values_input.push('');
+            this.values_output.push('');
         }
     },
     methods: {
@@ -242,16 +240,14 @@ Vue.component('simulator', {
                     state[j] = Math.random() < 0.5 ? -1 : 1;
                 }
 
+                // SA
                 var alpha       = 0.01;
                 var energy_prev = this.energy(state);
-
-                // routine
                 for(var j=0;j<iteration;j++){
                     var id = Math.floor(Math.random() * Math.floor(state.length));
 
                     var diff = 0;
-                    if(state[id] < 0){ state[id] = 1 }else{ state[id] = -1 }
-                    //state[id] = -state[id]; // flip
+                    state[id] = state[id] < 0 ? 1 : -1;
                     if(this.values_input[id] !== ''){
                         for(var next of graph[id]){
                             if(this.values_input[next.to] === '') continue;
@@ -265,8 +261,7 @@ Vue.component('simulator', {
                     if(energy_next < energy_prev || Math.random() < p){
                         energy_prev = energy_next;
                     }else{
-                        //state[id] = -state[id]; // flip
-                        if(state[id] < 0){ state[id] = 1 }else{ state[id] = -1 }
+                        state[id] = state[id] < 0 ? 1 : -1;
                     }
                 }
 
