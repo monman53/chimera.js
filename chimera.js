@@ -29,24 +29,16 @@ Vue.component('simulator', {
                   </div>
                   <div style="float: left">
                       <div v-if="mode=='input'">
-                          <h3>入力: 手動</h3>
+                          <h3>マウスで</h3>
                           <button v-on:click="setPallete(-1)">-1</button>
                           <button v-on:click="setPallete(0)">0</button>
                           <button v-on:click="setPallete(1)">1</button>
+                          <button v-on:click="setPallete('')">消しゴム</button>
                           <br>
                           <input v-model="palette" type='number' min='-1' max='1' step='0.01'>
-                          <br>
                           <input v-model="palette" type='range'  min='-1' max='1' step='0.01'>
-                      </div>
-                      <div v-if="mode=='input'">
-                          <h3>入力: 自動</h3>
-                          -> Read<input type='text' v-model="json_output" readonly>
-                          <br>
-                          <- <button v-on:click="setInput()">Write</button>
-                          <input type='text' v-model="json_input">
-                          <br>
-                          クリップボードで実装したい.jp
-                          <br>
+
+                          <h3>いっきに</h3>
                           <- <button v-on:click="setRandomInput()">Random</button>
                           <input v-model="random_range" type='range'  min='0' max='1' step='0.01' value='0.5'> {{random_range}}
                           <br>
@@ -54,6 +46,15 @@ Vue.component('simulator', {
                           <button v-on:click="fillInput(0)">0</button>
                           <button v-on:click="fillInput(1)">1</button>
                           <button v-on:click="fillInput(-1)">-1</button>
+
+                          <h3>保存(コピー&ペースト)</h3>
+                          -> Read<input type='text' v-model="json_output" readonly>
+                          <br>
+                          <- <button v-on:click="setInput()">Write</button>
+                          <input type='text' v-model="json_input">
+                          <br>
+                          クリップボードで実装したい.jp
+                          <br>
                       </div>
                   </div>
                   <div style="clear: both"></div>
