@@ -207,6 +207,8 @@ Vue.component('simulator', {
             for(var i=0;i<this.edges.length;i++){
                 const edge = this.edges[i];
                 if(this.values_input[edge.id] === '') continue;
+                if(this.values_input[edge.i] === '') continue;
+                if(this.values_input[edge.j] === '') continue;
                 res += this.values_input[edge.id]*state[edge.i]*state[edge.j];
             }
             return res;
@@ -220,8 +222,8 @@ Vue.component('simulator', {
                 graph[i] = [];
             }
             for(const edge of this.edges){
-                graph[edge.i].push({to: edge.j, weight: this.values[edge.id]});
-                graph[edge.j].push({to: edge.i, weight: this.values[edge.id]});
+                graph[edge.i].push({to: edge.j, weight: this.values_input[edge.id]});
+                graph[edge.j].push({to: edge.i, weight: this.values_input[edge.id]});
             }
 
 
@@ -245,8 +247,19 @@ Vue.component('simulator', {
                 // routine
                 for(var j=0;j<iteration;j++){
                     var id = Math.floor(Math.random() * Math.floor(state.length));
+
+                    var diff = 0;
                     state[id] = -state[id]; // flip
-                    var energy_next = this.energy(state);
+                    if(this.values_input[id] !== ''){
+                        for(var next of graph[id]){
+                            if(this.values_input[next.to] === '') continue;
+                            diff += 2*next.weight*state[id]*state[next.to];
+                        }
+                        diff += 2*this.values_input[id]*state[id];
+                    }
+                    var energy_next = energy_prev + diff;
+                    //var energy_next = this.energy(state);
+
                     if(energy_next < energy_prev){
                         energy_prev = energy_next;
                     }else{
