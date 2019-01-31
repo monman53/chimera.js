@@ -101,7 +101,7 @@ Vue.component('simulator', {
             pos: [],
             mode: "input",
             palette: 0,
-            random_range: 0.5,
+            random_range: 1,
         }
     },
     created: function() {
@@ -228,20 +228,21 @@ Vue.component('simulator', {
 
 
             //----------------
-            // simulated annealing(do not use best state)    // TODO current: hill climbing
+            // simulated annealing(best state is not used)
             //----------------
-            var trial = 100;
+            var trial = 10;
 
             var ans = {};
 
             for(var i=0;i<trial;i++){
-                var iteration = 1000;
+                var iteration = 100000;
                 // create state
                 var state = new Array(this.nodes.length);
                 for(var j=0;j<state.length;j++){
                     state[j] = Math.random() < 0.5 ? -1 : 1;
                 }
 
+                var alpha       = 0.01;
                 var energy_prev = this.energy(state);
 
                 // routine
@@ -249,7 +250,8 @@ Vue.component('simulator', {
                     var id = Math.floor(Math.random() * Math.floor(state.length));
 
                     var diff = 0;
-                    state[id] = -state[id]; // flip
+                    if(state[id] < 0){ state[id] = 1 }else{ state[id] = -1 }
+                    //state[id] = -state[id]; // flip
                     if(this.values_input[id] !== ''){
                         for(var next of graph[id]){
                             if(this.values_input[next.to] === '') continue;
@@ -258,12 +260,13 @@ Vue.component('simulator', {
                         diff += 2*this.values_input[id]*state[id];
                     }
                     var energy_next = energy_prev + diff;
-                    //var energy_next = this.energy(state);
 
-                    if(energy_next < energy_prev){
+                    var p = Math.exp((energy_prev-energy_next)/Math.pow(alpha, j/iteration));
+                    if(energy_next < energy_prev || Math.random() < p){
                         energy_prev = energy_next;
                     }else{
-                        state[id] = -state[id]; // flip
+                        //state[id] = -state[id]; // flip
+                        if(state[id] < 0){ state[id] = 1 }else{ state[id] = -1 }
                     }
                 }
 
