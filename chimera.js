@@ -52,6 +52,8 @@ Vue.component('simulator', {
                           <br>
                           <-
                           <button v-on:click="setRandomInput()">Random</button>
+                          <input v-model="random_range" type='range'  min='0' max='1' step='0.01' value='0.5'>
+                          {{random_range}}
                           <br>
                           <-
                           <button v-on:click="fillInput('')">Clear</button>
@@ -81,6 +83,7 @@ Vue.component('simulator', {
             pos: [],
             mode: "input",
             selected_id: null,
+            random_range: 0.5,
         }
     },
     created: function() {
@@ -153,7 +156,11 @@ Vue.component('simulator', {
         },
         setRandomInput: function() {
             for(var i=0;i<this.values_input.length;i++){
-                Vue.set(this.values_input, i, Math.round((Math.random()*2-1)*100)/100);
+                if(Math.random() < this.random_range){
+                    Vue.set(this.values_input, i, Math.round((Math.random()*2-1)*100)/100);
+                }else{
+                    Vue.set(this.values_input, i, '');
+                }
             }
         },
         fillInput: function(v) {
@@ -222,7 +229,7 @@ Vue.component('edge-item', {
         stroke:         function() { return this.isnull ? (this.active ? "#aaa" : "#eee") : this.color; },
         stroke:         function() {
             if(this.mode == "output"){
-                return this.value == 1 ? "#aaa" : "#fff";
+                return this.value == 1 ? "#aaa" : "#eee";
             }
             if(this.isnull){
                 return this.active ? "#aaa" : "#eee";
