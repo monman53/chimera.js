@@ -1,7 +1,7 @@
 Vue.component('simulator', {
     template:`<div>
                   <button v-on:click="changeMode('input')">入力</button>
-                  <button v-on:click="changeMode('run')">実行</button>
+                  <button v-on:click="runSA()">実行</button>
                   <button v-on:click="changeMode('output')">出力</button>
                   <br>
                   <div style="float: left">
@@ -162,6 +162,30 @@ Vue.component('simulator', {
             }
         },
         runSA: function() {
+            this.changeMode('run');
+
+            // create graph
+            var graph = new Array(this.nodes.length);
+            for(var i=0;i<this.nodes.length;i++){
+                graph[i] = [];
+            }
+            for(const edge of this.edges){
+                graph[edge.i].push({to: edge.j, weight: this.values[edge.id]});
+                graph[edge.j].push({to: edge.i, weight: this.values[edge.id]});
+            }
+
+            // create state
+            var state = new Array(this.nodes.length);
+            for(var i=0;i<state.length;i++){
+                state[i] = Math.random() < 0.5 ? -1 : 1;
+            }
+
+            // set output
+            for(var i=0;i<this.values.length;i++){
+                Vue.set(this.values_output, i, this.values_input[i] === '' ? '' : i < this.nodes.length ? state[i] : 1);
+            }
+
+            this.changeMode('output');
         },
     },
 });
@@ -177,7 +201,8 @@ Vue.component('edge-item', {
                    <line :x1="pos1.x" :y1="pos1.y" :x2="pos2.x" :y2="pos2.y"
                          stroke="#0000"
                          stroke-width="3"/>
-                   <text :x="((pos1.x+pos2.x)/2)"
+                   <text v-if="this.mode=='input'"
+                         :x="((pos1.x+pos2.x)/2)"
                          :y="((pos1.y+pos2.y)/2)"
                          :font-size='font_size'
                          text-anchor="middle"
@@ -195,6 +220,16 @@ Vue.component('edge-item', {
     computed: {
         stroke_width:   function() { return this.active ? 2 : 1; },
         stroke:         function() { return this.isnull ? (this.active ? "#aaa" : "#eee") : this.color; },
+        stroke:         function() {
+            if(this.mode == "output"){
+                return this.value == 1 ? "#aaa" : "#fff";
+            }
+            if(this.isnull){
+                return this.active ? "#aaa" : "#eee";
+            }else{
+                return this.color;
+            }
+        },
         active:         function() { return (this.mouse_over || this.selected_id == this.edge.id) && this.mode == "input"},
         isnull:         function() { return this.value === ''}, 
         font_size:      function() { return this.active ? 6 : 3; },
@@ -218,7 +253,8 @@ Vue.component('node-item', {
                            :stroke="stroke"
                            :fill="fill"
                            :stroke-width="stroke_width"/>
-                   <text   :x="pos.x"
+                   <text v-if="this.mode=='input'"
+                           :x="pos.x"
                            :y="pos.y"
                            :font-size='font_size'
                            text-anchor="middle"
