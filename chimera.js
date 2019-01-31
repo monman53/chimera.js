@@ -349,6 +349,7 @@ Vue.component('edge-item', {
                          :font-size='font_size'
                          text-anchor="middle"
                          dominant-baseline="ventral"
+                         style='pointer-events: none;'
                          >
                          {{value}}
                    </text>
@@ -386,6 +387,7 @@ Vue.component('node-item', {
                            :font-size='font_size'
                            text-anchor="middle"
                            dominant-baseline="ventral"
+                           style='pointer-events: none;'
                            >
                            {{value}}
                    </text>
