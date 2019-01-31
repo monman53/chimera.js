@@ -6,9 +6,6 @@ Vue.component('simulator', {
                   <br>
                   <div style="float: left">
                       <svg :viewBox='viewBox' :width="(w*300)">
-                          <rect x="0" y="0" :width="(w*100)" :height="(h*100)"
-                              style="fill: #0000"
-                              @mousedown='mouseDown'/>
                           <edge-item
                               v-for='edge in edges'
                               :key='edge.id'
@@ -33,6 +30,10 @@ Vue.component('simulator', {
                   <div style="float: left">
                       <div v-if="mode=='input'">
                           <h3>入力: 手動</h3>
+                          <button v-on:click="setPallete(-1)">-1</button>
+                          <button v-on:click="setPallete(0)">0</button>
+                          <button v-on:click="setPallete(1)">1</button>
+                          <br>
                           <input v-model="palette" type='number' min='-1' max='1' step='0.01'>
                           <br>
                           <input v-model="palette" type='range'  min='-1' max='1' step='0.01'>
@@ -132,12 +133,13 @@ Vue.component('simulator', {
         select: function(id) {
             Vue.set(this.values_input, id, this.palette);
         }, 
-        mouseDown: function() {
-        },
         changeMode: function(mode) {
             this.mode = mode;
             if(mode == "input" ){ this.values = this.values_input; }
             if(mode == "output"){ this.values = this.values_output; }
+        },
+        setPallete: function(v) {
+            this.palette = v;
         },
         setInput: function() {
             var array = JSON.parse(this.json_input);
