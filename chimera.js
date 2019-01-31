@@ -12,7 +12,7 @@ Vue.component('simulator', {
                           <edge-item
                               v-for='edge in edges'
                               :key='edge.id'
-                              :edge='edge'
+                              :item='edge'
                               :pos1='pos[edge.i]'
                               :pos2='pos[edge.j]'
                               :value='values[edge.id]'
@@ -23,7 +23,7 @@ Vue.component('simulator', {
                           <node-item
                               v-for='node in nodes'
                               :key='node.id'
-                              :node='node'
+                              :item='node'
                               :pos='pos[node.id]'
                               :value='values[node.id]'
                               :mode='mode'
@@ -155,6 +155,7 @@ Vue.component('simulator', {
             }
         },
         setRandomInput: function() {
+            this.selected_id = null;
             for(var i=0;i<this.values_input.length;i++){
                 if(Math.random() < this.random_range){
                     Vue.set(this.values_input, i, Math.round((Math.random()*2-1)*100)/100);
@@ -243,7 +244,30 @@ Vue.component('simulator', {
     },
 });
 
+var common = {
+    props: ['item', 'value', 'mode', 'selected_id'],
+    data: function() {
+        return {
+            mouse_over: false,
+        }
+    },
+    computed: {
+        stroke:       function() { return this.isnull ? (this.active ? "#aaa" : "#eee") : this.color; },
+        stroke_width: function() { return this.active ? 2 : 1; },
+        active:       function() { return (this.mouse_over || this.selected_id == this.item.id) && this.mode == "input"},
+        isnull:       function() { return this.value === ''}, 
+        font_size:    function() { return this.active ? 6 : 3; },
+        color:        function() { return `rgb(${255*(this.value/2+0.5)}, 80, ${255*(1-(this.value/2+0.5))})` },
+    },
+    methods: {
+        mouseOver:  function(){ this.mouse_over = true;},
+        mouseLeave: function(){ this.mouse_over = false },
+        mouseDown:  function(){ this.mouse_over = true; this.$emit('select', this.item.id); },
+    },
+};
+
 Vue.component('edge-item', {
+    mixins: [common],
     template: `<g
                    @mouseover="mouseOver"
                    @mousedown="mouseDown"
@@ -264,16 +288,9 @@ Vue.component('edge-item', {
                          {{value}}
                    </text>
                </g>`,
-    props: ['edge', 'value', 'pos1', 'pos2', 'mode', 'selected_id'],
-    data: function() {
-        return {
-            mouse_over: false,
-        }
-    },
+    props: ['pos1', 'pos2'],
     computed: {
-        stroke_width:   function() { return this.active ? 2 : 1; },
-        stroke:         function() { return this.isnull ? (this.active ? "#aaa" : "#eee") : this.color; },
-        stroke:         function() {
+        stroke: function() {
             if(this.mode == "output"){
                 return this.value == 1 ? "#aaa" : "#eee";
             }
@@ -283,19 +300,11 @@ Vue.component('edge-item', {
                 return this.color;
             }
         },
-        active:         function() { return (this.mouse_over || this.selected_id == this.edge.id) && this.mode == "input"},
-        isnull:         function() { return this.value === ''}, 
-        font_size:      function() { return this.active ? 6 : 3; },
-        color:          function() { return `rgb(${255*(this.value/2+0.5)}, 80, ${255*(1-(this.value/2+0.5))})` },
-    },
-    methods: {
-        mouseOver:  function(){ this.mouse_over = true;  },
-        mouseLeave: function(){ this.mouse_over = false; },
-        mouseDown:  function(){ this.mouse_over = true; this.$emit('select', this.edge.id);},
     },
 });
 
 Vue.component('node-item', {
+    mixins: [common],
     template: `<g
                    @mouseover="mouseOver"
                    @mousedown="mouseDown"
@@ -316,26 +325,10 @@ Vue.component('node-item', {
                            {{value}}
                    </text>
                </g>`,
-    props: ['node', 'value', 'pos', 'mode', 'selected_id'],
-    data: function() {
-        return {
-            mouse_over: false,
-        }
-    },
+    props: ['pos'],
     computed: {
-        r:              function() { return this.active ? 8 : 6; },
-        stroke_width:   function() { return this.active ? 2 : 1; },
-        stroke:         function() { return this.isnull ? (this.active ? "#aaa" : "#eee") : this.color; },
-        font_size:      function() { return this.active ? 6 : 3; },
-        fill:           function() { return this.isnull ? "#fff" : this.color; },
-        active:         function() { return (this.mouse_over || this.selected_id == this.node.id) && this.mode == "input"},
-        isnull:         function() { return this.value === ''},
-        color:          function() { return `rgb(${255*(this.value/2+0.5)}, 80, ${255*(1-(this.value/2+0.5))})` },
-    },
-    methods: {
-        mouseOver:  function(){ this.mouse_over = true;},
-        mouseLeave: function(){ this.mouse_over = false },
-        mouseDown:  function(){ this.mouse_over = true; this.$emit('select', this.node.id);},
+        r:    function() { return this.active ? 8 : 6; },
+        fill: function() { return this.isnull ? "#fff" : this.color; },
     },
 });
 
