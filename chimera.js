@@ -17,7 +17,6 @@ Vue.component('simulator', {
                               :pos2='pos[edge.j]'
                               :value='values[edge.id]'
                               :mode='mode'
-                              :selected_id='selected_id'
                               @select='select'>
                           </edge-item>
                           <node-item
@@ -27,36 +26,30 @@ Vue.component('simulator', {
                               :pos='pos[node.id]'
                               :value='values[node.id]'
                               :mode='mode'
-                              :selected_id='selected_id'
                               @select='select'>
                           </node-item>
                       </svg>
                   </div>
                   <div style="float: left">
-                      <div v-if="mode=='input' && selected_id != null">
+                      <div v-if="mode=='input'">
                           <h3>入力: 手動</h3>
-                          <input v-model="values[selected_id]" type='number' min='-1' max='1' step='0.01'>
+                          <input v-model="palette" type='number' min='-1' max='1' step='0.01'>
                           <br>
-                          <input v-model="values[selected_id]" type='range'  min='-1' max='1' step='0.01'>
+                          <input v-model="palette" type='range'  min='-1' max='1' step='0.01'>
                       </div>
                       <div v-if="mode=='input'">
                           <h3>入力: 自動</h3>
-                          ->
-                          Read<input type='text' v-model="json_output" readonly>
+                          -> Read<input type='text' v-model="json_output" readonly>
                           <br>
-                          <-
-                          <button v-on:click="setInput()">Write</button>
+                          <- <button v-on:click="setInput()">Write</button>
                           <input type='text' v-model="json_input">
                           <br>
                           クリップボードで実装したい.jp
                           <br>
-                          <-
-                          <button v-on:click="setRandomInput()">Random</button>
-                          <input v-model="random_range" type='range'  min='0' max='1' step='0.01' value='0.5'>
-                          {{random_range}}
+                          <- <button v-on:click="setRandomInput()">Random</button>
+                          <input v-model="random_range" type='range'  min='0' max='1' step='0.01' value='0.5'> {{random_range}}
                           <br>
-                          <-
-                          <button v-on:click="fillInput('')">Clear</button>
+                          <- <button v-on:click="fillInput('')">Clear</button>
                           <button v-on:click="fillInput(0)">0</button>
                           <button v-on:click="fillInput(1)">1</button>
                           <button v-on:click="fillInput(-1)">-1</button>
@@ -82,7 +75,7 @@ Vue.component('simulator', {
             json_input: "",
             pos: [],
             mode: "input",
-            selected_id: null,
+            palette: 0,
             random_range: 0.5,
         }
     },
@@ -137,16 +130,14 @@ Vue.component('simulator', {
     },
     methods: {
         select: function(id) {
-            this.selected_id = id;
+            Vue.set(this.values_input, id, this.palette);
         }, 
         mouseDown: function() {
-            this.selected_id = null;
         },
         changeMode: function(mode) {
             this.mode = mode;
             if(mode == "input" ){ this.values = this.values_input; }
             if(mode == "output"){ this.values = this.values_output; }
-            this.selected_id = null;
         },
         setInput: function() {
             var array = JSON.parse(this.json_input);
@@ -155,7 +146,6 @@ Vue.component('simulator', {
             }
         },
         setRandomInput: function() {
-            this.selected_id = null;
             for(var i=0;i<this.values_input.length;i++){
                 if(Math.random() < this.random_range){
                     Vue.set(this.values_input, i, Math.round((Math.random()*2-1)*100)/100);
@@ -245,31 +235,31 @@ Vue.component('simulator', {
 });
 
 var common = {
-    props: ['item', 'value', 'mode', 'selected_id'],
+    props: ['item', 'value', 'mode'],
     data: function() {
         return {
-            mouse_over: false,
+            mouse_hover: false,
         }
     },
     computed: {
         stroke:       function() { return this.isnull ? (this.active ? "#aaa" : "#eee") : this.color; },
         stroke_width: function() { return this.active ? 2 : 1; },
-        active:       function() { return (this.mouse_over || this.selected_id == this.item.id) && this.mode == "input"},
+        active:       function() { return this.mouse_hover && this.mode == "input"},
         isnull:       function() { return this.value === ''}, 
         font_size:    function() { return this.active ? 6 : 3; },
         color:        function() { return `rgb(${255*(this.value/2+0.5)}, 80, ${255*(1-(this.value/2+0.5))})` },
     },
     methods: {
-        mouseOver:  function(){ this.mouse_over = true;},
-        mouseLeave: function(){ this.mouse_over = false },
-        mouseDown:  function(){ this.mouse_over = true; this.$emit('select', this.item.id); },
+        mouseEnter:   function(e){ this.mouse_hover = true; if(e.buttons == 1){ this.$emit('select', this.item.id); }},
+        mouseLeave:   function(e){ this.mouse_hover = false },
+        mouseDown:    function(e){ if(e.buttons == 1){ this.$emit('select', this.item.id); } },
     },
 };
 
 Vue.component('edge-item', {
     mixins: [common],
     template: `<g
-                   @mouseover="mouseOver"
+                   @mouseenter="mouseEnter"
                    @mousedown="mouseDown"
                    @mouseleave="mouseLeave">
                    <line :x1="pos1.x" :y1="pos1.y" :x2="pos2.x" :y2="pos2.y"
@@ -306,7 +296,7 @@ Vue.component('edge-item', {
 Vue.component('node-item', {
     mixins: [common],
     template: `<g
-                   @mouseover="mouseOver"
+                   @mouseenter="mouseEnter"
                    @mousedown="mouseDown"
                    @mouseleave="mouseLeave">
                    <circle :cx="pos.x"
