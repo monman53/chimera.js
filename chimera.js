@@ -215,7 +215,7 @@ Vue.component('simulator', {
             }
             // edges
             for(var i=0;i<this.edges.length;i++){
-                const edge = this.edges[i];
+                let edge = this.edges[i];
                 if(this.values_input[edge.id] === '') continue;
                 if(this.values_input[edge.i] === '') continue;
                 if(this.values_input[edge.j] === '') continue;
@@ -231,7 +231,7 @@ Vue.component('simulator', {
             for(var i=0;i<this.nodes.length;i++){
                 graph[i] = [];
             }
-            for(const edge of this.edges){
+            for(let edge of this.edges){
                 graph[edge.i].push({to: edge.j, weight: this.values_input[edge.id]});
                 graph[edge.j].push({to: edge.i, weight: this.values_input[edge.id]});
             }
