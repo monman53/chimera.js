@@ -1,9 +1,5 @@
 Vue.component('simulator', {
     template:`<div>
-                  <button v-on:click="changeMode('input')">入力</button>
-                  <button v-on:click="runSA()">実行</button>
-                  <button v-on:click="changeMode('output')">出力</button>
-                  <br>
                   <div style="float: left">
                       <svg :viewBox='viewBox' :width="(w*300)">
                           <edge-item
@@ -28,17 +24,25 @@ Vue.component('simulator', {
                       </svg>
                   </div>
                   <div style="float: left">
+                      <h3>モード</h3>
+                      <button v-on:click="changeMode('input')">入力</button>
+                      <button v-on:click="runSA()">実行</button>
+                      <button v-on:click="changeMode('output')">結果</button>
+                      <br>
                       <div v-if="mode=='input'">
-                          <h3>マウスで</h3>
+                          <h3>マウスで入力</h3>
                           <button v-on:click="setPallete(-1)">-1</button>
+                          <button v-on:click="setPallete(-0.1)">-0.1</button>
                           <button v-on:click="setPallete(0)">0</button>
+                          <button v-on:click="setPallete(0.1)">0.1</button>
                           <button v-on:click="setPallete(1)">1</button>
-                          <button v-on:click="setPallete('')">消しゴム</button>
                           <br>
                           <input v-model="palette" type='number' min='-1' max='1' step='0.01'>
                           <input v-model="palette" type='range'  min='-1' max='1' step='0.01'>
+                          <br>
+                          <button v-on:click="setPallete('')">消しゴム</button>
 
-                          <h3>いっきに</h3>
+                          <h3>いっきに入力</h3>
                           <- <button v-on:click="setRandomInput()">Random</button>
                           <input v-model="random_range" type='range'  min='0' max='1' step='0.01' value='0.5'> {{random_range}}
                           <br>
@@ -47,7 +51,7 @@ Vue.component('simulator', {
                           <button v-on:click="fillInput(1)">1</button>
                           <button v-on:click="fillInput(-1)">-1</button>
 
-                          <h3>保存(コピー&ペースト)</h3>
+                          <h3>入力の保存(コピー&ペースト)</h3>
                           -> Read<input type='text' v-model="json_output" readonly>
                           <br>
                           <- <button v-on:click="setInput()">Write</button>
