@@ -79,10 +79,16 @@ Vue.component('simulator', {
                                       <td align='center'>{{i+1}}番目の答え</td> 
                                       <td align='center'><button v-on:click='setOutput(i)'>表示</button></td>
                                       <td align='right'>{{result.energy}}</td> 
-                                      <td align='right'>{{result.occurrence}}</td> 
+                                      <td align='right'>{{result.occurrence}}/100</td> 
                                   </tr>
                               </tbody>
                           </table>
+                          <dl>
+                              <dt><b>Energy<b></dt>
+                              <dd>エネルギー．値が小さいほど，その答えは良い</dd>
+                              <dt><b>Occurrence<b></dt>
+                              <dd>100回実行して，そのうち何回その答えが得られたか</dd>
+                          </dl>
                       </div>
                   </div>
                   <div style="clear: both"></div>
