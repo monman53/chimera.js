@@ -61,9 +61,10 @@ Vue.component('simulator', {
                       </div>
                       <div v-if="mode=='output'">
                           <h3>結果</h3>
-                          <table>
+                          <table border='1'>
                               <thead>
                                   <tr>
+                                      <th></th>
                                       <th></th>
                                       <th align='center'>Energy</th>
                                       <th align='center'>Occurrence</th>
@@ -71,7 +72,8 @@ Vue.component('simulator', {
                               </thead>
                               <tbody>
                                   <tr v-for='(result, i) in results'>
-                                      <td align='center'><- <button v-on:click='setOutput(i)'>表示</button></td>
+                                      <td align='center'>{{i+1}}番目の答え</td> 
+                                      <td align='center'><button v-on:click='setOutput(i)'>表示</button></td>
                                       <td align='right'>{{result.energy}}</td> 
                                       <td align='right'>{{result.occurrence}}</td> 
                                   </tr>
@@ -228,7 +230,7 @@ Vue.component('simulator', {
             //----------------
             // simulated annealing(best state is not used)
             //----------------
-            var trial = 10;
+            var trial = 100;
 
             var ans = {};
 
@@ -386,6 +388,7 @@ Vue.component('node-item', {
                            :y="pos.y"
                            :font-size='font_size'
                            text-anchor="middle"
+                           fill="white"
                            dominant-baseline="ventral"
                            style='pointer-events: none;'
                            >
@@ -394,7 +397,7 @@ Vue.component('node-item', {
                </g>`,
     props: ['pos'],
     computed: {
-        r:    function() { return this.active ? 8 : 6; },
+        r:    function() { return this.active ? 8 : 7; },
         fill: function() { return this.isnull ? "#fff" : this.color; },
     },
 });
