@@ -84,9 +84,9 @@ Vue.component('simulator', {
                               </tbody>
                           </table>
                           <dl>
-                              <dt><b>Energy<b></dt>
+                              <dt><b>Energy</b></dt>
                               <dd>エネルギー．値が小さいほど，その答えは良い</dd>
-                              <dt><b>Occurrence<b></dt>
+                              <dt><b>Occurrence</b></dt>
                               <dd>100回実行して，そのうち何回その答えが得られたか</dd>
                           </dl>
                       </div>
